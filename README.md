@@ -1,20 +1,20 @@
-# ---- Imports: core libraries used in this script ----
+#Imports:core libraries used in this script
 import torch, torchvision                               # PyTorch core and torchvision utilities
 import torch.nn as nn                                   # neural network layers and modules
-import torch.optim as optim                             # optimization algorithms (Adam, SGD, ...)
+import torch.optim as optim                             # optimization algorithms
 from torchvision import transforms, datasets            # common transforms and datasets (MNIST)
 from torch.utils.data import DataLoader                 # creates iterable over dataset in batches
 import matplotlib.pyplot as plt                         # plotting images / results
 from PIL import Image, ImageOps                         # Pillow: image loading and simple ops (invert, resize)
 import numpy as np, io                                  # numpy for numeric ops; io for in-memory byte streams
-from google.colab import files                          # Colab helper to upload files from your computer
+from google.colab import files                          # Colab helper to upload files from our computer
 
-# ---- Device selection: use GPU if available for faster training ----
+# Device selection: use GPU if available for faster training
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # 'device' will be "cuda" if GPU exists else "cpu"; we use this to move tensors/model later
 print("Using device:", device)
 
-# ---- DATA: transform + loaders ----
+#DATA: transform + loaders
 # single transform: convert to tensor and normalize to roughly [-1, 1]
 tfm = transforms.Compose([
     transforms.ToTensor(),                              # convert PIL image (H×W) to tensor (C×H×W) in [0,1]
@@ -32,7 +32,7 @@ test_loader  = DataLoader(
     batch_size=256
 )
 
-# ---- MODEL: a compact CNN (convolutional network) ----
+#MODEL: a compact CNN (convolutional network)
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()                              # call parent constructor
@@ -56,12 +56,12 @@ class CNN(nn.Module):
 # instantiate model and move it to the selected device (GPU/CPU)
 model = CNN().to(device)
 
-# ---- Optimizer and loss ----
+#Optimizer and loss
 opt = optim.Adam(model.parameters(), lr=0.001)        # Adam optimizer with learning rate 0.001; optimizes model params
 loss_fn = nn.CrossEntropyLoss()                       # loss suitable for multi-class classification (applies softmax internally)
 
-# ---- TRAIN loop: a few epochs (kept small for demo) ----
-for epoch in range(3):                                 # run 3 full passes over the training dataset
+# TRAIN loop: a few epochs (kept small for demo)
+for epoch in range(8):                                 # run 3 full passes over the training dataset
     model.train()                                     # set model to training mode (enables dropout)
     for X, y in train_loader:                         # iterate batches: X = images, y = labels
         X, y = X.to(device), y.to(device)             # move data to the same device as the model (GPU/CPU)
@@ -75,7 +75,7 @@ for epoch in range(3):                                 # run 3 full passes over 
     acc = sum((model(X.to(device)).argmax(1) == y.to(device)).sum().item() for X, y in test_loader) / len(test_loader.dataset)
     print(f"Epoch {epoch+1} Test Acc: {acc*100:.2f}%") # print test accuracy as percentage
 
-# ---- Prediction helper for uploaded images ----
+# Prediction helper for uploaded images
 def preprocess(pil_img):
     """
     Convert a PIL image to the model input:
@@ -91,7 +91,8 @@ def preprocess(pil_img):
     img = img.resize((28, 28))                         # resize to MNIST resolution
     return tfm(img).unsqueeze(0).to(device)            # apply transform, add batch dim (1,1,28,28), move to device
 
-# ---- Upload one or more images in Colab and predict ----
+
+#Upload one or more images in Colab and predict
 uploaded = files.upload()                             # opens file-picker in Colab; returns dict filename -> bytes
 for fname, filebytes in uploaded.items():              # iterate uploaded files
     img = Image.open(io.BytesIO(filebytes))            # read the uploaded bytes into a PIL Image
